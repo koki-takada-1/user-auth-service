@@ -1,0 +1,46 @@
+Project USERAUTHSERVICE {
+  database_type: 'PostgreSQL'
+  Note: '''
+    ## ユーザ認証系
+
+  '''
+}
+
+Table user {
+  id uuid [pk , default: `uuid_generate_v4()`]
+  name varchar(255) [not null]
+  email varchar(255) [unique, not null]
+  password_hash varchar(60) [not null]
+  role_id uuid [not null, ref: > role.id]
+  is_verified bool [not null, default: false]
+  updated_at timestamptz [default: `now()`]
+  created_at timestamptz [default: `now()`]
+}
+
+Table role {
+  id uuid [pk, default: `uuid_generate_v4()`]
+  name varchar(255) [not null]
+  updated_at timestamptz [default: `now()`]
+  created_at timestamptz [default: `now()`]
+}
+
+Table sessions {
+  id uuid [pk, default: `uuid_generate_v4()`]
+  username varchar(255) [not null, ref: > user.name]
+  refresh_token varchar(255) [not null]
+  user_agent varchar(255) [not null]
+  client_ip varchar(255) [not null]
+  is_blocked bool [not null]
+  expires_at timestamptz [not null]
+  created_at timestamptz [not null, default: `now()`]
+}
+
+Table verify_email {
+  id uuid [pk, default: `uuid_generate_v4()`]
+  username uuid [not null,ref: - user.name]
+  email varchar(255) [not null]
+  secfret_code varchar [not null]
+  is_used bool [not null, default: false ]
+  created_at timestamptz [not null, default: `nows()`]
+  expired_at timestamptz [not null, default: `now() + interval '15 minutes'`]
+}
