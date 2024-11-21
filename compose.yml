@@ -1,0 +1,80 @@
+services:
+  reception:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    tty: true
+    ports:
+      - "${GRPC_SERVER_PORT}:${GRPC_SERVER_PORT}"
+    volumes:
+      - ./:/app
+    environment:
+      - GO111MODULE=on
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - moenie
+
+  cli:
+    build:
+      context: .
+      dockerfile: Dockerfile.cli
+    tty: true
+    environment:
+      - GO111MODULE=on
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - moenie
+
+  db:
+    image: postgres:alpine:3.20
+    container_name: postgres_reception
+    ports:
+      - 5433:5433
+    volumes:
+      - db-store:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - PGPORT=${DB_PORT}
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - moenie
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin_reception
+    ports:
+      - 9998:80
+    volumes:
+      - pgadmin-data:/app/pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=example1@domain.com
+      - PGADMIN_DEFAULT_PASSWORD=password
+    depends_on:
+      - db
+    networks:
+      - moenie
+
+volumes:
+  db-store:
+  pgadmin-data:
+
+networks:
+  moenie:
+    driver: bridge
+    external: true
