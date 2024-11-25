@@ -1,4 +1,4 @@
-Project USERAUTHSERVICE {
+Project USER_AUTH_SERVICE {
   database_type: 'PostgreSQL'
   Note: '''
     ## ユーザ認証系
@@ -8,39 +8,43 @@ Project USERAUTHSERVICE {
 
 Table user {
   id uuid [pk , default: `uuid_generate_v4()`]
-  name varchar(255) [not null]
-  email varchar(255) [unique, not null]
-  password_hash varchar(60) [not null]
-  role_id uuid [not null, ref: > role.id]
-  is_verified bool [not null, default: false]
-  updated_at timestamptz [default: `now()`]
-  created_at timestamptz [default: `now()`]
+  name varchar [not null,note:"ユーザー名"]
+  email varchar [unique, not null,note:"メールアドレス"]
+  password_hash varchar [not null,note:"ハッシュ化されたパスワード"]
+  role_id uuid [not null, ref: > role.id, note:"役割id"]
+  is_verified bool [not null, default: false, note:"検証済みかどうか"]
+  updated_at timestamptz [not null,default: `now()`]
+  created_at timestamptz [not null,default: `now()`]
+  note: "ユーザ"
 }
 
 Table role {
   id uuid [pk, default: `uuid_generate_v4()`]
-  name varchar(255) [not null]
-  updated_at timestamptz [default: `now()`]
-  created_at timestamptz [default: `now()`]
+  name varchar [not null, note:"役割名"]
+  updated_at timestamptz [not null,default: `now()`]
+  created_at timestamptz [not null,default: `now()`]
+  note: "役割"
 }
 
 Table sessions {
   id uuid [pk, default: `uuid_generate_v4()`]
-  username varchar(255) [not null, ref: > user.name]
-  refresh_token varchar(255) [not null]
-  user_agent varchar(255) [not null]
-  client_ip varchar(255) [not null]
-  is_blocked bool [not null]
-  expires_at timestamptz [not null]
+  username varchar [not null, ref: > user.name]
+  refresh_token varchar [not null,note:"リフレッシュトークン"]
+  user_agent varchar [not null,note:"ユーザーエージェント"]
+  client_ip varchar [not null,note:"クライアントIP"]
+  is_blocked bool [not null,note:"セッションをブロックするかどうか"]
+  expires_at timestamptz [not null,note:"セッション有効期限"]
   created_at timestamptz [not null, default: `now()`]
+  note: "セッション"
 }
 
 Table verify_email {
   id uuid [pk, default: `uuid_generate_v4()`]
   username uuid [not null,ref: - user.name]
-  email varchar(255) [not null]
-  secfret_code varchar [not null]
+  email varchar [not null]
+  secret_code varchar [not null]
   is_used bool [not null, default: false ]
   created_at timestamptz [not null, default: `nows()`]
   expired_at timestamptz [not null, default: `now() + interval '15 minutes'`]
+  note: "認証済みEmail"
 }
